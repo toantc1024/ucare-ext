@@ -10,6 +10,6 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/contentScript/contentScript.js"
-  ],
+, "src/options/options.jsx", "src/options/options.jsx"  ],
   "exclude": ["node_modules"]
 }

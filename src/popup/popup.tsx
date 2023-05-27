@@ -2,13 +2,21 @@ import React, { useEffect, useState } from "react";
 import "./popup.css";
 
 const Popup = () => {
+  const [user, setUser] = useState(null);
+
   const [minutes, setMinutes] = useState(30);
   const [timer, setTimer] = useState(null);
   useEffect(() => {
+    chrome.storage.local.get(["user"], function (result) {
+      // console.log("Value currently is " + JSON.stringify(result));
+      setUser(result.user);
+    });
+
     const getTimer = async () => {
       await chrome.alarms.clearAll();
       const data = await chrome.storage.sync.get("timer");
       console.log(data, data.timer);
+      setMinutes(data.timer.periodInMinutes);
       setTimer(data.timer);
     };
     getTimer();
@@ -32,6 +40,7 @@ const Popup = () => {
     });
 
     const drinkWater = () => {
+      chrome.storage.local.set({ timeToDrink: true });
       chrome.tabs.create({ url: "options.html" });
     };
 
@@ -46,13 +55,14 @@ const Popup = () => {
   useEffect(() => {
     if (timer === null) return;
     const updateNotify = async () => {
+      await chrome.alarms.clearAll();
+
       const { periodInMinutes, timestamp } = timer;
       const timeRemainingInMs =
         periodInMinutes * 60 * 1000 - Date.now() + timestamp;
       const timeRemainingInMinutes = timeRemainingInMs / 1000 / 60;
       console.log(timeRemainingInMinutes);
 
-      await chrome.alarms.clearAll();
       chrome.alarms.create({
         periodInMinutes: timeRemainingInMinutes,
       });
@@ -78,9 +88,13 @@ const Popup = () => {
           onClick={() => {
             chrome.tabs.create({ url: "options.html" });
           }}
-          className="text-xl"
+          className={
+            user
+              ? "h-10 w-10 hover:cursor-pointer hover:bg-gray-200 rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 flex items-center justify-center text-white text-xl font-bold"
+              : "w-20 text-white bg-primary-600 hover:bg-primary-700 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 flex justify-center items-center "
+          }
         >
-          Login
+          {user ? "W" : "Login"}
         </button>
       </div>
 
@@ -114,7 +128,7 @@ const Popup = () => {
             //   periodInMinutes: 0.5,
             // });
           }}
-          className="bg-sky-500 hover:bg-sky-600 active:bg-sky-400 transition-all ease-in-out duration-100 text-white p-2 rounded-lg font-semibold drop-shadow-sm"
+          className="w-40 text-white bg-primary-600 hover:bg-primary-700 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 flex justify-center items-center "
         >
           Set time
         </button>
